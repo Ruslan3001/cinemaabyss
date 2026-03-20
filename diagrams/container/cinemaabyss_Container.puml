@@ -1,0 +1,40 @@
+@startuml cinemaabyss_Container_AsIs
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+' Заголовок диаграммы
+title Диаграмма контейнеров (As-Is): Система "CinemaAbyss"
+
+' Акторы и внешние системы (из диаграммы контекста)
+Person(user, "Пользователь", "Открывает сайт/приложение, аутентифицируется, выбирает фильмы, ставит оценки и собирает избранное.")
+
+System_Ext(online_cinemas, "Онлайн-кинотеатры", "Внешние платформы для интеграции контента.")
+System_Ext(rec_sys, "Внешняя рекомендательная система", "Генерирует персональные рекомендации.")
+System_Ext(payment_sys, "Платежная система", "Обрабатывает платежи пользователей.")
+System_Ext(s3_storage, "Хранилище S3", "Хранилище для медиафайлов (постеры, видео).")
+
+' Граница системы "CinemaAbyss"
+System_Boundary(c1, "CinemaAbyss") {
+    ' Контейнеры внутри системы
+    Container(web_app, "Web Application", "JavaScript, React", "Веб-интерфейс для браузеров на ноутбуках.")
+    Container(mobile_app, "Mobile App", "Kotlin/Swift", "Нативное приложение для iOS и Android.")
+    Container(tv_app, "Smart TV App", "JavaScript, Tizen/WebOS SDK", "Приложение для Smart TV.")
+
+    Container(backend_api, "Monolith API", "Go", "Большой запутанный монолит. Предоставляет REST API, обрабатывает аутентификацию, избранное, оценки и бизнес-логику.")
+    ContainerDb(db, "Единая база данных", "PostgreSQL", "Хранит платежи, пользователей, видео, подписки, скидки, метаданные о фильмах (жанры, актёры, оценки).")
+}
+
+' Взаимодействия
+Rel(user, web_app, "Использует", "HTTPS")
+Rel(user, mobile_app, "Использует", "HTTPS")
+Rel(user, tv_app, "Использует", "HTTPS")
+
+Rel(web_app, backend_api, "Синхронные API-запросы", "HTTPS, REST")
+Rel(mobile_app, backend_api, "Синхронные API-запросы", "HTTPS, REST")
+Rel(tv_app, backend_api, "Синхронные API-запросы", "HTTPS, REST")
+
+Rel(backend_api, db, "Синхронно читает/записывает", "SQL")
+Rel(backend_api, online_cinemas, "Синхронно запрашивает данные", "REST API")
+Rel(backend_api, rec_sys, "Асинхронно запрашивает подборки", "API")
+Rel(backend_api, payment_sys, "Синхронно обрабатывает транзакции", "REST API")
+Rel(backend_api, s3_storage, "Синхронно работает с медиафайлами", "S3 API / REST")
+@enduml

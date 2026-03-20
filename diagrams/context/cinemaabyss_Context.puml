@@ -1,0 +1,25 @@
+@startuml cinemaabyss_Context_AsIs
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+' Заголовок диаграммы As-Is
+title Диаграмма контекста (As-Is): Система "CinemaAbyss"
+
+' Акторы
+Person(user, "Пользователь", "Открывает сервис с ноутбука, ТВ или телефона. Аутентифицируется, выбирает фильмы, ставит оценки и составляет папку с избранным.")
+
+' Система
+System(cinemaabyss, "CinemaAbyss", "Монолитный сервис (Go) для каталогизации, поиска, просмотра фильмов и управления подписками.")
+
+' Внешние системы
+System_Ext(online_cinemas, "Онлайн-кинотеатры", "Внешние платформы для интеграции контента.")
+System_Ext(rec_sys, "Внешняя рекомендательная система", "Делает персональные подборки фильмов.")
+System_Ext(payment_sys, "Платежная система", "Обрабатывает платежи пользователей.")
+System_Ext(s3_storage, "Хранилище S3", "Хранилище для медиафайлов (постеры, видео).")
+
+' Взаимодействия
+Rel(user, cinemaabyss, "Использует сервис", "HTTPS")
+Rel(cinemaabyss, online_cinemas, "Синхронно получает данные", "REST API")
+Rel(cinemaabyss, rec_sys, "Асинхронно получает подборки", "API")
+Rel(cinemaabyss, payment_sys, "Синхронно инициирует транзакции", "REST API")
+Rel(cinemaabyss, s3_storage, "Синхронно работает с медиафайлами", "S3 API / REST")
+@enduml

@@ -1,0 +1,79 @@
+@startuml cinemaabyss_Container_ToBe
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+' Заголовок диаграммы
+title Диаграмма контейнеров (To-Be): Система "CinemaAbyss"
+
+' Акторы и внешние системы
+Person(user, "Пользователь", "Открывает сайт/приложение, аутентифицируется, выбирает фильмы, ставит оценки и собирает избранное.")
+
+System_Ext(online_cinemas, "Онлайн-кинотеатры", "Внешние платформы для интеграции контента.")
+System_Ext(rec_sys, "Внешняя рекомендательная система", "Генерирует персональные рекомендации.")
+System_Ext(payment_sys, "Платежная система", "Обрабатывает платежи пользователей (Эквайринг).")
+System_Ext(s3_storage, "Хранилище S3 / CDN", "Хранилище для медиафайлов (постеры, видео).")
+
+' Граница системы "CinemaAbyss"
+System_Boundary(c1, "CinemaAbyss (Kubernetes Cluster)") {
+    
+    ' Frontends
+    Container(web_app, "Web Application", "JavaScript, React", "Веб-интерфейс для браузеров на ноутбуках.")
+    Container(mobile_app, "Mobile App", "Kotlin/Swift", "Нативное приложение для iOS и Android.")
+    Container(tv_app, "Smart TV App", "JavaScript, Tizen/WebOS SDK", "Приложение для Smart TV.")
+
+    ' Единая точка входа
+    Container(api_gateway, "API Gateway / Proxy", "Go", "Единая точка входа (Facade). Балансировка, TLS, Rate Limiting и маршрутизация по паттерну Strangler Fig.")
+
+    ' Микросервисы (Домены)
+    Container(auth_service, "Authentication Service", "Go", "Аутентификация, авторизация (JWT), управление сессиями.")
+    Container(movies_service, "Movies Service", "Go", "Метаданные о фильмах, жанры, рейтинги, поиск.")
+    Container(user_profile_service, "User Profile Service", "Go", "Личные данные, избранное, история просмотров.")
+    Container(payment_service, "Payment Service", "Go", "Обработка подписок и транзакций.")
+    Container(rec_adapter_service, "Recommendation Service", "Go", "Внутренний фасад (Anti-Corruption Layer) для подготовки и кеширования рекомендаций.")
+    Container(content_delivery_service, "Content Delivery Service", "Go", "Отдача медиа-контента, генерация pre-signed URL для S3.")
+    Container(events_service, "Events Service", "Go", "Сбор и обработка через Kafka: события фильмов (просмотр, оценка, добавление), пользователей (регистрация, вход) и платежей.")
+
+    ' Шина данных
+    ContainerQueue(kafka, "Message Broker", "Kafka", "Асинхронное взаимодействие (Event-Driven). События пользователей, оплат, просмотров.")
+
+    ' Базы данных (Изолированные хранилища для сервисов - Database per service)
+    ContainerDb(auth_db, "Auth DB", "PostgreSQL", "Хранит учетные данные.")
+    ContainerDb(movies_db, "Movies DB", "PostgreSQL", "Хранит метаданные фильмов.")
+    ContainerDb(user_profile_db, "User Profile DB", "PostgreSQL", "Хранит пользовательские списки.")
+    ContainerDb(payments_db, "Payments DB", "PostgreSQL", "Хранит чеки и статус подписок.")
+}
+
+' Взаимодействия от пользователя к Gateway
+Rel(user, web_app, "Синхронно использует", "HTTPS")
+Rel(user, mobile_app, "Синхронно использует", "HTTPS")
+Rel(user, tv_app, "Синхронно использует", "HTTPS")
+
+Rel(web_app, api_gateway, "Синхронные API-запросы", "HTTPS, REST/GraphQL")
+Rel(mobile_app, api_gateway, "Синхронные API-запросы", "HTTPS, REST/GraphQL")
+Rel(tv_app, api_gateway, "Синхронные API-запросы", "HTTPS, REST/GraphQL")
+
+' Взаимодействия Gateway -> Микросервисы
+Rel(api_gateway, auth_service, "Синхронно маршрутизирует", "REST/gRPC")
+Rel(api_gateway, movies_service, "Синхронно маршрутизирует", "REST/gRPC")
+Rel(api_gateway, user_profile_service, "Синхронно маршрутизирует", "REST/gRPC")
+Rel(api_gateway, payment_service, "Синхронно маршрутизирует", "REST/gRPC")
+Rel(api_gateway, rec_adapter_service, "Синхронно маршрутизирует", "REST/gRPC")
+Rel(api_gateway, content_delivery_service, "Синхронно маршрутизирует", "REST/gRPC")
+Rel(api_gateway, events_service, "Синхронно маршрутизирует (Отправка логов/событий)", "REST/gRPC")
+
+' Взаимодействия Микросервисов с БД и внешними системами
+Rel(auth_service, auth_db, "Синхронно читает/пишет", "SQL")
+Rel(movies_service, movies_db, "Синхронно читает/пишет", "SQL")
+Rel(user_profile_service, user_profile_db, "Синхронно читает/пишет", "SQL")
+Rel(payment_service, payments_db, "Синхронно читает/пишет", "SQL")
+
+Rel(movies_service, online_cinemas, "Синхронно запрашивает данные", "REST API")
+Rel(rec_adapter_service, rec_sys, "Асинхронно запрашивает подборки", "API")
+Rel(payment_service, payment_sys, "Синхронно проводит транзакции", "REST API")
+Rel(content_delivery_service, s3_storage, "Синхронно получает/сохраняет медиа", "S3 API / REST")
+
+' Асинхронные события
+Rel(auth_service, kafka, "Асинхронные события (Создан пользователь)", "TCP")
+Rel(payment_service, kafka, "Асинхронные события (Подписка оплачена)", "TCP")
+Rel(user_profile_service, kafka, "Асинхронно читает/пишет события", "TCP")
+Rel(events_service, kafka, "Асинхронно читает/пишет события", "TCP")
+@enduml
