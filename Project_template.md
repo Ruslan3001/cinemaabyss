@@ -59,12 +59,12 @@
 Необходимые тесты для проверки этого API вызываются при запуске npm run test:local из папки tests/postman 
 Приложите скриншот тестов и скриншот состояния топиков Kafka из UI http://localhost:8090 
 
-![Скрин тестов 1](cinemaabyss/ScreenShot/Task2.Test1.png)
-![Скрин тестов 2](cinemaabyss/ScreenShot/Task2.Test2.png)
-![Скрин тестов 3](cinemaabyss/ScreenShot/Task2.Test3.png)
+![Скрин тестов 1](ScreenShot/Task2.Test1.png)
+![Скрин тестов 2](ScreenShot/Task2.Test2.png)
+![Скрин тестов 3](ScreenShot/Task2.Test3.png)
 
-![Скрин Kafka 1](cinemaabyss/ScreenShot/Task2.Kafka1.png)
-![Скрин Kafka 2](cinemaabyss/ScreenShot/Task2.Kafka2.png)
+![Скрин Kafka 1](ScreenShot/Task2.Kafka1.png)
+![Скрин Kafka 2](ScreenShot/Task2.Kafka2.png)
 
 # Задание 3
 
