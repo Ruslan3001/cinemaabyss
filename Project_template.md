@@ -236,19 +236,12 @@ cat .docker/config.json | base64
 
 ```bash
   NAME                              READY   STATUS    
-
   events-service-7587c6dfd5-6whzx   1/1     Running  
-
   kafka-0                           1/1     Running   
-
   monolith-8476598495-wmtmw         1/1     Running  
-
   movies-service-6d5697c584-4qfqs   1/1     Running  
-
   postgres-0                        1/1     Running  
-
   proxy-service-577d6c549b-6qfcv    1/1     Running  
-
   zookeeper-0                       1/1     Running 
 ```
 
@@ -280,8 +273,10 @@ cat .docker/config.json | base64
   Откройте логи event-service и сделайте скриншот обработки событий
 
 #### Шаг 3
-Добавьте сюда скриншота вывода при вызове https://cinemaabyss.example.com/api/movies и  скриншот вывода event-service после вызова тестов.
-
+Добавьте сюда скриншота вывода при вызове https://cinemaabyss.example.com/api/movies 
+![Скрин вывода при вызове https://cinemaabyss.example.com/api/movies](ScreenShot/Task3.event-service.png)
+и  скриншот вывода event-service после вызова тестов.
+![Скрин вывода event-service после вызова тестов](ScreenShot/Task3.log.png)
 
 # Задание 4
 Для простоты дальнейшего обновления и развертывания вам как архитектуру необходимо так же реализовать helm-чарты для прокси-сервиса и проверить работу 
@@ -353,12 +348,15 @@ kubectl get pods -n cinemaabyss
 minikube tunnel
 ```
 
-Потом вызовите 
-https://cinemaabyss.example.com/api/movies
-и приложите скриншот развертывания helm и вывода https://cinemaabyss.example.com/api/movies
+Потом вызовите https://cinemaabyss.example.com/api/movies
+и приложите скриншот развертывания helm 
+![Скрин развертывания helm](ScreenShot/Task4.Helm.png)
+![Скрин статуса подов после развертывания helm](ScreenShot/Task4.Helm.2.CheckPod.png)
+
+и вывода https://cinemaabyss.example.com/api/movies
+![Скрин вывода https://cinemaabyss.example.com/api/movies после развертывания](ScreenShot/Task4.Helm.3.Movies.png)
 
 ## Удаляем все
-
 ```bash
 kubectl delete all --all -n cinemaabyss
 kubectl delete namespace cinemaabyss

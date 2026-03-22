@@ -1,4 +1,4 @@
-{{- if .Values.proxyService.enabled }}
+{{- if .Values.proxyService.enabled -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -6,18 +6,11 @@ metadata:
   namespace: {{ .Values.global.namespace }}
   labels:
     app: proxy-service
-    app.kubernetes.io/name: {{ include "cinemaabyss.name" . }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
 spec:
   replicas: {{ .Values.proxyService.replicas }}
   selector:
     matchLabels:
       app: proxy-service
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxSurge: 1
-      maxUnavailable: 0
   template:
     metadata:
       labels:
@@ -25,18 +18,39 @@ spec:
     spec:
       containers:
       - name: proxy-service
-        ..... тут
+        image: "{{ .Values.proxyService.image.repository }}:{{ .Values.proxyService.image.tag }}"
+        imagePullPolicy: {{ .Values.proxyService.image.pullPolicy }}
+        ports:
+        - containerPort: {{ .Values.proxyService.service.targetPort }}
+        env:
+        - name: PORT
+          value: "{{ .Values.proxyService.service.targetPort }}"
+        - name: MONOLITH_URL
+          value: "http://monolith:{{ .Values.monolith.service.port }}"
+        - name: MOVIES_SERVICE_URL
+          value: "http://movies-service:{{ .Values.moviesService.service.port }}"
+        - name: EVENTS_SERVICE_URL
+          value: "http://events-service:{{ .Values.eventsService.service.port }}"
+        envFrom:
+        - configMapRef:
+            name: cinemaabyss-config
+        - secretRef:
+            name: cinemaabyss-secrets
+        resources:
+          {{- toYaml .Values.proxyService.resources | nindent 10 }}
+      imagePullSecrets:
+        - name: dockerconfigjson
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: proxy-service
   namespace: {{ .Values.global.namespace }}
-  labels:
-    app: proxy-service
-    app.kubernetes.io/name: {{ include "cinemaabyss.name" . }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
 spec:
   selector:
-    ... и тут
-{{- end }}
+    app: proxy-service
+  ports:
+  - port: {{ .Values.proxyService.service.port }}
+    targetPort: {{ .Values.proxyService.service.targetPort }}
+  type: {{ .Values.proxyService.service.type }}
+{{- end -}}
